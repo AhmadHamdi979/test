@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Grade Form</title>
+    <link rel="stylesheet" href="main.css">
+    <style>
+        .grades,
+        .absence {
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 12px;
+        }
+
+        .error-asterisk {
+            color: red;
+            display: none;
+        }
+
+        .red-border {
+            border: 1px solid red;
+        }
+
+        .compute-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+
+        .hidden-table {
+            display: none;
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .hidden-table th,
+        .hidden-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .hidden-table th {
+            background-color: yellow;
+            color: green;
+        }
+
+        .hidden-table td {
+            background-color: green;
+            color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <audio id="rainAudio" src="rain.mp3" preload="auto"></audio>
+        <audio id="birdAudio" src="bird.mp3" preload="auto" loop></audio>
+        <audio id="noisyAudio" src="noisy.mp3"></audio>
+        <form id="gradeForm">
+            <div>
+                <label for="name">Student Name</label>
+                <input type="text" id="name" name="student_name" onfocus="handleFocus()" onblur="handleBlur()" oninput="validateName()">
+                <span class="error-message" id="nameError"></span>
+            </div>
+            <div class="grades">
+                <div>
+                    <label for="first_exam">First Exam (20%)</label>
+                    <input type="text" id="first_exam" name="first_exam" onfocus="handleFocus()" onblur="handleBlur()" oninput="validateExamMark('first_exam', this.value, 20)">
+                    <span class="error-asterisk" id="first_exam_asterisk">*</span>
+                    <span class="error-message" id="first_exam_message"></span>
+                </div>
+                <div>
+                    <label for="second_exam">Second Exam (20%)</label>
+                    <input type="text" id="second_exam" name="second_exam" onfocus="handleFocus()" onblur="handleBlur()" oninput="validateExamMark('second_exam', this.value, 20)">
+                    <span class="error-asterisk" id="second_exam_asterisk">*</span>
+                    <span class="error-message" id="second_exam_message"></span>
+                </div>
+                <div>
+                    <label for="final_exam">Final Exam (50%)</label>
+                    <input type="text" id="final_exam" name="final_exam" onfocus="handleFocus()" onblur="handleBlur()" oninput="validateExamMark('final_exam', this.value, 50)">
+                    <span class="error-asterisk" id="final_exam_asterisk">*</span>
+                    <span class="error-message" id="final_exam_message"></span>
+                </div>
+                <div>
+                    <label for="participation">Participation</label>
+                    <input type="number" min="0" max="10" id="participation" name="participation" onfocus="handleFocus()" onblur="handleBlur()" oninput="validateExamMark('participation', this.value, 10)">
+                    <span class="error-asterisk" id="participation_asterisk">*</span>
+                    <span class="error-message" id="participation_message"></span>
+                </div>
+            </div>
+            <div class="absence">
+                <label>Absence</label>
+                <label><input type="radio" name="absence" value="<7" checked> &lt; 7 times</label>
+                <label><input type="radio" name="absence" value=">=7"> &ge; 7 times</label>
+            </div>
+            <div>
+                <button type="button" id="computeButton" class="compute-btn" onclick="computeGrade()">Compute</button>
+            </div>
+            <div class="result">
+                <div class="output" id="output"></div>
+                <span class="error-message" id="effortMessage"></span>
+            </div>
+        </form>
+        <button class="compute-btn" onclick="showAll()">Show All</button>
+        <table class="hidden-table" id="studentTable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>First</th>
+                    <th>Second</th>
+                    <th>Final</th>
+                    <th>Participation</th>
+                    <th>Absences (&lt;7 times yes/no)</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <h3 style="text-align: center;">How to use:</h3>
+        <div class="video">    
+        <video src="Desktop 2024.05.26 - 20.50.22.06.mp4" controls width="500px" height="500" ></video>
+        </div>
+    </div>
+
+    <script>
+        const computeButton = document.getElementById('computeButton');
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const birdAudio = document.getElementById('birdAudio');
+            birdAudio.play();
+        });
+
+        function handleFocus() {
+            const rainAudio = document.getElementById('rainAudio');
+            const birdAudio = document.getElementById('birdAudio');
+            rainAudio.play();
+            birdAudio.pause();
+        }
+
+        function handleBlur() {
+            const rainAudio = document.getElementById('rainAudio');
+            const birdAudio = document.getElementById('birdAudio');
+            rainAudio.pause();
+            birdAudio.play();
+        }
+
+        function validateName() {
+            const nameInput = document.getElementById('name');
+            const nameError = document.getElementById('nameError');
+            const nameRegex = /^[a-zA-Z\s]*$/;
+
+            if (!nameRegex.test(nameInput.value)) {
+                nameError.textContent = 'Invalid name. Please use only letters and spaces.';
+                nameInput.classList.add('error-border');
+                playNoisyAudio();
+                computeButton.disabled = true;
+            } else {
+                nameError.textContent = '';
+                nameInput.classList.remove('error-border');
+                stopNoisyAudio();
+                computeButton.disabled = false;
+            }
+        }
+
+        function playNoisyAudio() {
+            const noisyAudio = document.getElementById('noisyAudio');
+            noisyAudio.play();
+        }
+
+        function stopNoisyAudio() {
+            const noisyAudio = document.getElementById('noisyAudio');
+            noisyAudio.pause();
+            noisyAudio.currentTime = 0;
+        }
+
+        function validateExamMark(id, value, max) {
+            const input = document.getElementById(id);
+            const asterisk = document.getElementById(id + "_asterisk");
+            const error = document.getElementById(id + "_message");
+
+            if (value === '' || (parseFloat(value) >= 0 && parseFloat(value) <= max)) {
+                input.classList.remove('red-border');
+                asterisk.style.display = 'none';
+                error.style.display = 'none';
+                computeButton.disabled = false;
+                stopNoisyAudio();
+                return true;
+            } else {
+                input.classList.add('red-border');
+                asterisk.style.display = 'inline';
+                error.textContent = `Please enter a number in the range 0-${max}.`;
+                error.style.display = 'block';
+                playNoisyAudio();
+                computeButton.disabled = true;
+                return false;
+            }
+        }
+
+        function computeGrade() {
+            const name = document.getElementById('name').value;
+            const firstExam = parseFloat(document.getElementById('first_exam').value) || 0;
+            const secondExam = parseFloat(document.getElementById('second_exam').value) || 0;
+            const finalExam = parseFloat(document.getElementById('final_exam').value) || 0;
+            const participation = parseFloat(document.getElementById('participation').value) || 0;
+
+            if (!validateExamMark('first_exam', document.getElementById('first_exam').value, 20) ||
+                !validateExamMark('second_exam', document.getElementById('second_exam').value, 20) ||
+                !validateExamMark('final_exam', document.getElementById('final_exam').value, 50) ||
+                !validateExamMark('participation', document.getElementById('participation').value, 10)) {
+                playNoisyAudio();
+                return;
+            }
+
+            const total = firstExam + secondExam + finalExam + participation;
+            let grade;
+
+            const absence = document.querySelector('input[name="absence"]:checked');
+            const absenceValue = absence ? (absence.value === "<7" ? "yes" : "no") : '';
+            if (absence && absence.value === '>=7') {
+                grade = 'F';
+            } else {
+                if (total >= 90) {
+                    grade = 'A';
+                } else if (total >= 80) {
+                    grade = 'B';
+                } else if (total >= 70) {
+                    grade = 'C';
+                } else if (total >= 60) {
+                    grade = 'D';
+                } else {
+                    grade = 'F';
+                }
+            }
+
+            const output = document.getElementById('output');
+            output.textContent = `${name} Total = ${total}, Grade = ${grade}`;
+            output.style.display = 'block';
+
+            const effortMessage = document.getElementById('effortMessage');
+            if (grade === 'F') {
+                output.style.backgroundColor = 'red';
+                output.style.color = 'black';
+                effortMessage.textContent = "You need more effort";
+                const badResultSound = new Audio('bad.mp3');
+                badResultSound.play();
+            } else if (grade === 'A') {
+                output.style.backgroundColor = 'blue';
+                output.style.color = 'black';
+                effortMessage.textContent = "Great effort!";
+                const applause = new Audio('applause.mp3');
+                applause.play();
+            } else {
+                output.style.backgroundColor = '';
+                output.style.color = '';
+                effortMessage.textContent = '';
+            }
+
+            const studentInfo = {
+                name,
+                firstExam,
+                secondExam,
+                finalExam,
+                participation,
+                absence: absenceValue,
+                grade
+            };
+
+            let students = JSON.parse(localStorage.getItem('students')) || [];
+            students.push(studentInfo);
+            localStorage.setItem('students', JSON.stringify(students));
+        }
+
+        function showAll() {
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+            const tableBody = document.getElementById('studentTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+
+            students.forEach(student => {
+                const row = document.createElement('tr');
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = student.name;
+                row.appendChild(nameCell);
+
+                const firstCell = document.createElement('td');
+                firstCell.textContent = student.firstExam;
+                row.appendChild(firstCell);
+
+                const secondCell = document.createElement('td');
+                secondCell.textContent = student.secondExam;
+                row.appendChild(secondCell);
+
+                const finalCell = document.createElement('td');
+                finalCell.textContent = student.finalExam;
+                row.appendChild(finalCell);
+
+                const participationCell = document.createElement('td');
+                participationCell.textContent = student.participation;
+                row.appendChild(participationCell);
+
+                const absenceCell = document.createElement('td');
+                absenceCell.textContent = student.absence;
+                row.appendChild(absenceCell);
+
+                const gradeCell = document.createElement('td');
+                gradeCell.textContent = student.grade;
+                row.appendChild(gradeCell);
+
+                tableBody.appendChild(row);
+            });
+
+            const studentTable = document.getElementById('studentTable');
+            studentTable.style.display = 'table';
+        }
+        // localStorage.clear();
+    </script>
+</body>
+
+</html>
